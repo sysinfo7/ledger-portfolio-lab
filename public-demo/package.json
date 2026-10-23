@@ -1,0 +1,1 @@
+{"name":"ledger-public-demo","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.mjs"}}

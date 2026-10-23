@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6f2">
+  <meta name="description" content="A local, synthetic portfolio simulator. Explore portfolio ideas using virtual money.">
+  <title>Ledger — Portfolio Lab</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Portfolio navigation">
+      <a class="brand" href="#main" aria-label="Ledger Portfolio Lab home"><span class="brand-mark">L</span><span>ledger<span class="brand-dot">.</span></span></a>
+      <div class="side-label">WORKSPACE</div>
+      <button class="nav-item active" id="overviewNav" type="button"><span class="nav-icon">◫</span> Overview</button>
+      <button class="nav-item" id="holdingsNav" type="button"><span class="nav-icon">▤</span> Holdings</button>
+      <button class="nav-item" id="activityNav" type="button"><span class="nav-icon">↔</span> Activity</button>
+      <div class="side-divider"></div>
+      <div class="side-heading"><span>WATCHLIST</span><button class="icon-button tiny" id="aboutOpen" aria-label="About this demo" title="About this demo">i</button></div>
+      <div id="watchlist" class="watchlist" aria-label="Synthetic watchlist"></div>
+      <div class="sidebar-bottom"><div class="mini-orbit"><span></span><span></span><span></span></div><p>Small steps.<br><strong>Clear thinking.</strong></p><button class="text-button" id="walkthroughOpen">Interview walkthrough <span>↗</span></button></div>
+    </aside>
+
+    <main id="main" class="main-content">
+      <header class="topbar">
+        <div class="mobile-brand"><span class="brand-mark">L</span> ledger<span class="brand-dot">.</span></div>
+        <div class="breadcrumb">Portfolio Lab <span>/</span> <strong id="crumbName">My Portfolio</strong></div>
+        <div class="top-actions"><span class="synthetic-badge"><span class="pulse-dot"></span> Synthetic data · virtual money</span><button class="icon-button" id="exportMenuBtn" aria-label="Export portfolio" title="Export portfolio">⇩</button><button class="avatar" id="aboutAvatar" aria-label="About Ledger">L</button></div>
+      </header>
+
+      <div class="page-wrap">
+        <section class="welcome-row">
+          <div><div class="eyebrow"><span class="eyebrow-line"></span> INTERACTIVE PORTFOLIO DEMO</div><h1>Make room for <em>what’s next.</em></h1><p class="welcome-copy">Explore a portfolio idea, place virtual trades, and see how your choices might unfold.</p></div>
+          <div class="account-tools"><label class="sr-only" for="accountSelect">Choose demo account</label><select id="accountSelect" aria-label="Choose demo account"></select><button class="button button-light" id="addAccountBtn"><span>＋</span> New account</button></div>
+        </section>
+
+        <div class="status-strip" id="storageNotice" role="status" hidden></div>
+        <section class="date-banner"><div class="date-icon">◷</div><div><strong>Scenario date <span id="scenarioDate">—</span></strong><span class="date-sub">A virtual market timeline for this demo account</span></div><div class="date-controls"><button class="button button-light button-small" id="generatorOpen">New scenario</button><button class="button button-light button-small" id="advanceBtn">Advance 1 day <span>→</span></button><button class="button button-green button-small" id="playBtn" aria-pressed="false"><span class="play-symbol">▶</span> Play simulation</button></div></section>
+
+        <section class="metric-grid" aria-label="Portfolio summary">
+          <article class="metric-card"><div class="metric-top"><span>PORTFOLIO VALUE</span><span class="metric-icon mint">↗</span></div><strong id="totalValue" class="metric-value">—</strong><div class="metric-caption">Including uninvested cash</div><div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 30"><path d="M1 23 C14 21 16 14 27 18 S42 24 52 12 68 19 77 11 94 16 103 6 111 10 119 3"/></svg></div></article>
+          <article class="metric-card"><div class="metric-top"><span>TOTAL RETURN</span><span class="metric-icon green">％</span></div><strong id="totalReturn" class="metric-value">—</strong><div class="metric-caption" id="returnCaption">Since account start</div><div class="metric-change" id="returnChange">—</div></article>
+          <article class="metric-card"><div class="metric-top"><span>STARTING CAPITAL</span><span class="metric-icon lavender">◈</span></div><strong id="investedValue" class="metric-value">—</strong><div class="metric-caption">Original virtual deposit</div><div class="metric-bar"><span id="investedBar"></span></div></article>
+          <article class="metric-card"><div class="metric-top"><span>AVAILABLE CASH</span><span class="metric-icon sand">$</span></div><strong id="cashValue" class="metric-value">—</strong><div class="metric-caption">Ready for a virtual order</div><button class="inline-link" id="tradeJump">Trade stocks <span>↗</span></button></article>
+        </section>
+
+        <section class="chart-grid" aria-label="Portfolio and stock charts">
+          <article class="panel portfolio-panel"><div class="panel-header"><div><div class="panel-kicker">PERFORMANCE</div><h2>Portfolio growth</h2><p>See your account value over time.</p></div><div class="range-tabs" role="group" aria-label="Portfolio chart range"><button data-range="30" class="range-tab">1M</button><button data-range="365" class="range-tab selected" aria-pressed="true">1Y</button><button data-range="1825" class="range-tab">5Y</button></div></div><div id="portfolioChart" class="chart-container"></div><div class="chart-legend"><span><i class="legend-dot actual"></i> Portfolio value</span><span><i class="legend-dot baseline"></i> <span id="startingCapitalLegend">Starting capital</span></span><span class="chart-end" id="chartEndDate">—</span></div></article>
+          <article class="panel stock-panel"><div class="panel-header"><div><div class="panel-kicker">MARKET SNAPSHOT</div><h2 id="stockChartTitle">AAPL</h2><p id="stockChartSubtitle">Synthetic daily close</p></div><span class="market-tag">DEMO MARKET</span></div><div id="stockChart" class="stock-chart"></div><div class="stock-price-row"><div><span>LAST CLOSE</span><strong id="stockPrice">—</strong></div><div class="stock-change" id="stockChange">—</div></div><div class="stock-footnote">Illustrative prices · no live feed</div></article>
+        </section>
+
+        <section class="panel ideas-panel"><div class="panel-header compact"><div><div class="panel-kicker">SCENARIO NOTES</div><h2>What’s moving in this demo</h2></div><span class="market-tag">RULE BASED · HISTORICAL</span></div><p class="ideas-intro">Simple synthetic momentum signals from this scenario’s recent prices. They are explanations of past movement, not forecasts.</p><div id="suggestionsList" class="suggestions-grid"></div></section>
+
+        <section class="lower-grid">
+          <article class="panel holdings-panel" id="holdingsSection"><div class="panel-header compact"><div><div class="panel-kicker">YOUR POSITIONS</div><h2>Holdings <span class="count-pill" id="holdingCount">0</span></h2></div><button class="text-button" id="seeAllHoldings">View all <span>→</span></button></div><div class="table-scroll"><table><thead><tr><th>ASSET</th><th>SHARES</th><th>AVG. COST</th><th>PRICE</th><th>VALUE</th><th>RETURN</th></tr></thead><tbody id="holdingsBody"></tbody></table></div><div class="empty-state" id="holdingsEmpty" hidden><span class="empty-glyph">◌</span><strong>Your portfolio is a blank canvas.</strong><span>Place a virtual order to add your first holding.</span><button class="button button-green button-small" id="emptyTrade">Explore a trade</button></div></article>
+          <article class="panel trade-panel" id="tradeSection"><div class="panel-header compact"><div><div class="panel-kicker">PAPER TRADING</div><h2>Place an order</h2></div><span class="lock-label"><span>◇</span> Virtual only</span></div><form id="tradeForm" class="trade-form"><div class="side-toggle" role="group" aria-label="Order side"><button type="button" data-side="buy" class="side-option active">Buy</button><button type="button" data-side="sell" class="side-option">Sell</button></div><label class="field-label" for="symbolSelect">Stock</label><div class="select-wrap"><select id="symbolSelect" required></select><span class="select-caret">⌄</span></div><label class="field-label" for="quantityInput">Shares</label><div class="input-wrap"><input id="quantityInput" type="number" min="0.001" step="0.001" placeholder="0" inputmode="decimal" required><span>shares</span></div><div class="order-estimate"><span>Estimated total</span><strong id="orderEstimate">$0.00</strong></div><div class="order-note" id="orderNote">Price estimate uses the latest synthetic close.</div><button class="button button-green submit-order" type="submit"><span id="submitLabel">Review buy order</span><span>→</span></button></form></article>
+        </section>
+
+        <section class="panel activity-panel" id="activitySection"><div class="panel-header compact"><div><div class="panel-kicker">ACCOUNT HISTORY</div><h2>Recent activity</h2></div><button class="text-button" id="exportActivity">Export CSV <span>↓</span></button></div><div class="activity-list" id="activityList"></div><div class="activity-empty" id="activityEmpty" hidden>No trades yet. Your virtual activity will appear here.</div></section>
+
+        <footer class="footer"><span class="footer-mark">L</span><span>Ledger Portfolio Lab</span><span class="footer-sep">·</span><span id="persistenceText">Saved on this device · no sign-in</span><span class="footer-right">For learning and interview practice</span></footer>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="accountDialog" class="dialog"><form method="dialog" id="accountDialogForm"><button class="dialog-close" aria-label="Close">×</button><div class="dialog-kicker">A FRESH START</div><h2>Create a demo account</h2><p>Choose a name for this synthetic portfolio. It stays in this browser on this device.</p><label class="field-label" for="accountNameInput">Account name</label><input class="dialog-input" id="accountNameInput" maxlength="40" placeholder="e.g. Long-term ideas" required autocomplete="off"><button class="button button-green dialog-primary" value="create">Create account <span>→</span></button></form></dialog>
+  <dialog id="orderDialog" class="dialog"><form method="dialog" id="orderDialogForm"><button class="dialog-close" aria-label="Close">×</button><div class="dialog-kicker">ORDER PREVIEW</div><h2>Review your virtual order</h2><p class="dialog-muted">This stays inside the local demo. No brokerage connection or real order is involved.</p><div class="order-preview" id="orderPreview"></div><div class="dialog-actions"><button class="button button-light" value="cancel">Go back</button><button class="button button-green" id="confirmOrderBtn" value="confirm">Confirm virtual order <span>→</span></button></div></form></dialog>
+  <dialog id="generatorDialog" class="dialog"><form method="dialog" id="generatorForm"><button class="dialog-close" aria-label="Close">×</button><div class="dialog-kicker">SCENARIO GENERATOR</div><h2>Generate a new timeline</h2><p>Reset only <strong id="generatorAccountName">this account</strong> with a fresh synthetic starting portfolio.</p><label class="field-label" for="generatorDays">History length</label><select class="dialog-input" id="generatorDays"><option value="30">30 days · 1 month</option><option value="90">90 days · 3 months</option><option value="365" selected>365 days · 1 year</option><option value="1095">1,095 days · 3 years</option><option value="1825">1,825 days · 5 years</option></select><label class="field-label" for="generatorSeed">Scenario seed</label><input class="dialog-input" id="generatorSeed" type="number" min="1" max="999999999" value="2026"><label class="check-row"><input id="generatorConfirm" type="checkbox" required><span>I understand this resets this account’s synthetic positions and activity.</span></label><div class="dialog-actions"><button class="button button-light" value="cancel">Cancel</button><button class="button button-green" value="generate">Generate scenario</button></div></form></dialog>
+  <dialog id="aboutDialog" class="dialog about-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button><div class="dialog-kicker">ABOUT THIS EXPERIENCE</div><h2>Built for safe exploration.</h2><p>This public Portfolio Lab runs locally in your browser. Its prices, trades, and money are synthetic and for demonstration only.</p><div class="about-card"><span class="about-icon">⌂</span><div><strong>Public demo</strong><span>Browser-native experience · visitor-local portfolios · no sign-in · no network trading</span></div></div><div class="about-card"><span class="about-icon server">⌘</span><div><strong>Private implementation</strong><span>Separately, the private application integrates Alpaca through a server-side API, Cloudflare Worker and D1. Provider secrets stay server-side, with conditional writes and tested invariants.</span></div></div><a class="walkthrough-link" href="/employer-guide.html">Open the interview walkthrough <span>↗</span></a><a class="walkthrough-link" href="/downloads/ledger-source.zip" download>Download the project source <span>↓</span></a><button class="text-button reset-link" id="resetOpen" type="button">Reset local demo data</button></form></dialog>
+  <dialog id="resetDialog" class="dialog"><form method="dialog" id="resetForm"><button class="dialog-close" aria-label="Close">×</button><div class="dialog-kicker">LOCAL DEMO DATA</div><h2>Reset this browser’s demo?</h2><p>This removes all Ledger demo accounts saved in this browser on this device. It does not affect any brokerage account.</p><div class="dialog-actions"><button class="button button-light" value="cancel">Keep accounts</button><button class="button button-danger" id="confirmReset" value="reset">Reset demo data</button></div></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

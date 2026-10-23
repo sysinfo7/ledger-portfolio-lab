@@ -1,0 +1,7 @@
+.git/
+node_modules/
+.sites-runtime/
+outputs/
+.env*
+.dev.vars*
+*.log

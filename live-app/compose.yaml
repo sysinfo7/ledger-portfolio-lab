@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - portfolio-data:/app/.wrangler/state
+      # Optional: create .dev.vars from .dev.vars.example, then uncomment:
+      # - ./.dev.vars:/app/.dev.vars:ro
+volumes:
+  portfolio-data:
