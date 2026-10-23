@@ -11,6 +11,7 @@ import {
   Menu, Plus, RefreshCw, Search, Sparkles, TrendingUp, Wallet,
   X,
 } from "lucide-react";
+import { readApiJson } from "@/lib/api-response.mjs";
 
 type Account = { id: string; name: string; initialCash: number; mode: Mode };
 type Mode = "synthetic" | "live";
@@ -136,9 +137,9 @@ export default function Home() {
       const params = new URLSearchParams({ mode, symbol });
       if (accountId) params.set("accountId", accountId);
       const response = await fetch(`/api/state?${params}`, { cache: "no-store" });
-      const body = await response.json() as StateData & { error?: string };
+      const body = await readApiJson<StateData & { error?: string }>(response);
       if (!response.ok) {
-        if (response.status === 404 && accountId) {
+        if (response.status === 404 && accountId && body && typeof body === "object" && "error" in body) {
           if (requestNo === seq.current) {
             setAccountIds((previous) => ({ ...previous, [mode]: "" }));
             setAccountId("");
@@ -166,7 +167,13 @@ export default function Home() {
       }
       if (body.account?.mode && body.account.mode !== mode && !accountId) setMode(body.account.mode);
     } catch (err) {
-      if (requestNo === seq.current) { setError(err instanceof Error ? err.message : "Unable to reach the market service."); errorOrigin.current = "load"; }
+      if (requestNo === seq.current) {
+        // A failed refresh must not leave an older account's data actionable.
+        setData(null);
+        setLoadedSymbol("");
+        setError(err instanceof Error ? err.message : "Unable to reach the market service.");
+        errorOrigin.current = "load";
+      }
     } finally {
       if (requestNo === seq.current) setLoading(false);
     }
@@ -181,7 +188,7 @@ export default function Home() {
 
   const post = async (payload: Record<string, unknown>, context = { accountId, mode }) => {
     const response = await fetch("/api/state", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, ...context }) });
-    const body = await response.json() as { error?: string; accountId?: string; ok?: boolean };
+    const body = await readApiJson<{ error?: string; accountId?: string; ok?: boolean }>(response);
     if (!response.ok) throw Object.assign(new Error(body.error || "That action could not be completed."), { status: response.status });
     return body;
   };

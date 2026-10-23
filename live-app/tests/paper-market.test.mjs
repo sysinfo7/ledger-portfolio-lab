@@ -28,6 +28,7 @@ const tempDir = await mkdtemp(path.join(os.tmpdir(), "paper-market-tests-"));
 const modulePath = path.join(tempDir, "paper-market.mjs");
 await writeFile(modulePath, transformed, "utf8");
 const market = await import(pathToFileURL(modulePath).href);
+const marketWithFreshQuoteCache = await import(`${pathToFileURL(modulePath).href}?fresh-quote-cache`);
 
 const schema = `
   CREATE TABLE paper_accounts (
@@ -99,10 +100,14 @@ async function state(accountId, mode = "synthetic") {
 async function trade(accountId, side, quantity, mode = "synthetic", symbol = "AAPL") {
   return market.postAction({ action: "trade", accountId, mode, symbol, side, quantity });
 }
-function mockAlpaca({ quotePrice = 100, quoteTimestamp = new Date().toISOString(), bars = [], barStatus = 200 } = {}) {
+function mockAlpaca({ quotePrice = 100, quoteTimestamp = new Date().toISOString(), bars = [], barStatus = 200, malformedSnapshot = false, malformedBars = false } = {}) {
   globalThis.fetch = async input => {
     const url = String(input);
-    if (url.includes("/snapshot?")) return Response.json({ latestTrade: { p: quotePrice, t: quoteTimestamp }, prevDailyBar: { c: quotePrice - 1 } });
+    if (url.includes("/snapshot?")) {
+      if (malformedSnapshot) return new Response("<!DOCTYPE html><html>proxy diagnostic</html>", { status: 200, headers: { "content-type": "text/html" } });
+      return Response.json({ latestTrade: { p: quotePrice, t: quoteTimestamp }, prevDailyBar: { c: quotePrice - 1 } });
+    }
+    if (url.includes("/bars?") && malformedBars) return new Response("<!DOCTYPE html><html>proxy diagnostic</html>", { status: 200, headers: { "content-type": "text/html" } });
     if (url.includes("/bars?")) return new Response(JSON.stringify({ bars }), { status: barStatus, headers: { "content-type": "application/json" } });
     throw new Error(`Unexpected mocked request: ${url}`);
   };
@@ -253,6 +258,30 @@ test("live candle failure preserves quote and portfolio data and returns a warni
   assert.equal(current.summary.totalValue, 10_000);
   assert.deepEqual(current.candles, []);
   assert.match(current.market.message, /candle|bar|alpaca.*503/i);
+});
+
+test("malformed live snapshot JSON returns a descriptive 503 without provider HTML", async () => {
+  mockAlpaca({ malformedSnapshot: true });
+  const accountId = await createAccount("Invalid snapshot", 10_000, "live");
+  await assert.rejects(marketWithFreshQuoteCache.getState(new URLSearchParams({ mode: "live", accountId })), error => {
+    assert.equal(error.status, 503);
+    assert.match(error.message, /live quote unavailable.*alpaca returned invalid market data/i);
+    assert.equal(error.message.includes("<!DOCTYPE"), false);
+    assert.equal(error.message.includes("proxy diagnostic"), false);
+    return true;
+  });
+});
+
+test("malformed live candle JSON preserves quotes and portfolio data with a warning", async () => {
+  mockAlpaca({ malformedBars: true });
+  const accountId = await createAccount("Invalid candles", 10_000, "live");
+  const current = await state(accountId, "live");
+  assert.equal(current.quotes.length, 10);
+  assert.equal(current.summary.totalValue, 10_000);
+  assert.deepEqual(current.candles, []);
+  assert.match(current.market.message, /live candles unavailable.*alpaca returned invalid market data/i);
+  assert.equal(current.market.message.includes("<!DOCTYPE"), false);
+  assert.equal(current.market.message.includes("proxy diagnostic"), false);
 });
 
 test("cached live quote is marked stale after its trade timestamp ages", async () => {

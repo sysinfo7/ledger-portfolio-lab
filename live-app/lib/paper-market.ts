@@ -114,7 +114,7 @@ async function alpacaQuote(symbol: string, fresh = false): Promise<Quote> {
   try {
     const response = await fetch(`https://data.alpaca.markets/v2/stocks/${symbol}/snapshot?feed=iex`, { headers: { "APCA-API-KEY-ID": env.ALPACA_API_KEY, "APCA-API-SECRET-KEY": env.ALPACA_API_SECRET }, signal: AbortSignal.timeout(8000) });
     if (!response.ok) throw new Error(`Alpaca returned ${response.status}`);
-    const data = await response.json() as { latestTrade?: { p: number; t: string }; dailyBar?: { c: number }; prevDailyBar?: { c: number } };
+    const data = await response.json().catch(() => { throw new Error("Alpaca returned invalid market data. Try again shortly"); }) as { latestTrade?: { p: number; t: string }; dailyBar?: { c: number }; prevDailyBar?: { c: number } };
     const price = data.latestTrade?.p;
     const previousClose = data.prevDailyBar?.c ?? data.dailyBar?.c;
     if (typeof price !== "number" || !Number.isFinite(price) || price <= 0 || typeof previousClose !== "number" || !Number.isFinite(previousClose) || previousClose <= 0) throw new Error("No valid positive IEX snapshot price is available");
@@ -152,7 +152,7 @@ async function alpacaCandles(symbol: string, days: number) {
     if (token) query.set("page_token", token);
     const response = await fetch(`https://data.alpaca.markets/v2/stocks/${symbol}/bars?${query}`, { headers: { "APCA-API-KEY-ID": env.ALPACA_API_KEY, "APCA-API-SECRET-KEY": env.ALPACA_API_SECRET }, signal: AbortSignal.timeout(8000) });
     if (!response.ok) throw err(`Live candles unavailable for ${symbol}: Alpaca returned ${response.status}`, 503);
-    const data = await response.json() as { bars?: Array<{ t: string; c: number }>; next_page_token?: string | null };
+    const data = await response.json().catch(() => { throw err(`Live candles unavailable for ${symbol}: Alpaca returned invalid market data. Try again shortly.`, 503); }) as { bars?: Array<{ t: string; c: number }>; next_page_token?: string | null };
     output.push(...(data.bars ?? []).map(bar => ({ date: bar.t.slice(0, 10), close: money(bar.c) })));
     token = data.next_page_token ?? undefined;
   } while (token && output.length < days + 10);
